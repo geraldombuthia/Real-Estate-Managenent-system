@@ -130,29 +130,36 @@ MongoClient.connect(
             })
             app.route("/login").get((req, res) => {
                 res.render("./login")
-            }).post((req, res, next) => {
+            }).post((req, res) => {
+                console.log("Login")
                 passport.authenticate('local', {
                     successRedirect: './dashboard',
                     failureRedirect: './login',
-                })(req, res, next);
+                });
+                console.log("success");
             })
             app.route("/profile").get((req, res) => {
                 res.send("THis is the profile")
             });
-
+            app.route('/logout').get((req, res) => {
+                req.logout();
+                res.redirect('/');
+            });
             passport.serializeUser(function (user, done) {
                 done(null, user._id);
             });
 
             passport.deserializeUser(function (id, done) {
-                User.findById({
+                client.db("test").collection("users").findById({
                     _id: new ObjectID(id)
                 }, (err, user) => {
-                    done(err, user);
+                        done(err, user);
+                        console.log(user);
                 });
             });
             passport.use(new LocalStrategy((email, password, done) => {
-                    client.db("test").collection("users").findOne({ email : email }, (err, user) => {
+                console.log(email)
+                client.db("test").collection("users").findOne({usernameField: "email"},{ email : email }, (err, user) => {
                         console.log('User ' + email + ' attempted to log in.');
                         if (err) { return done(err); }
                         if (!user) { return done(null, false); }
